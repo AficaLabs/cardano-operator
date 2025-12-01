@@ -1,11 +1,41 @@
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  labels:
-    app.kubernetes.io/name: cardano-operator
-    app.kubernetes.io/managed-by: kustomize
   name: manager-role
 rules:
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "list", "watch"]
+- apiGroups:
+  - cardano.cardano.org
+  resources:
+  - cardanonodes
+  - kesrotations
+  - offlinesigningnodes
+  - stakepools
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cardano.cardano.org
+  resources:
+  - cardanonodes/finalizers
+  - kesrotations/finalizers
+  - offlinesigningnodes/finalizers
+  - stakepools/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cardano.cardano.org
+  resources:
+  - cardanonodes/status
+  - kesrotations/status
+  - offlinesigningnodes/status
+  - stakepools/status
+  verbs:
+  - get
+  - patch
+  - update
