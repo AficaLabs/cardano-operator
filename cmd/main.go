@@ -86,6 +86,9 @@ func main() {
 	flag.StringVar(&metricsCertKey, "metrics-cert-key", "tls.key", "The name of the metrics server key file.")
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
+	var enableWebhooks bool
+	flag.BoolVar(&enableWebhooks, "enable-webhooks", true,
+		"Enable admission webhooks. Disable if running without cert-manager or webhook certificates.")
 
 	// Configure structured logging with zap
 	// In production mode (default), logs are JSON formatted for machine parsing
@@ -248,14 +251,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Setup validation webhooks
-	if err := cardanowebhook.SetupStakePoolWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "StakePool")
-		os.Exit(1)
-	}
-	if err := cardanowebhook.SetupCardanoNodeWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "CardanoNode")
-		os.Exit(1)
+	// Setup validation webhooks (only if enabled)
+	if enableWebhooks {
+		if err := cardanowebhook.SetupStakePoolWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "StakePool")
+			os.Exit(1)
+		}
+		if err := cardanowebhook.SetupCardanoNodeWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "CardanoNode")
+			os.Exit(1)
+		}
+		setupLog.Info("Webhooks enabled")
+	} else {
+		setupLog.Info("Webhooks disabled")
 	}
 	// +kubebuilder:scaffold:builder
 
