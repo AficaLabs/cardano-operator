@@ -40,6 +40,7 @@ import (
 
 	cardanov1alpha1 "github.com/AficaLabs/cardano-operator/api/v1alpha1"
 	"github.com/AficaLabs/cardano-operator/internal/controller"
+	cardanowebhook "github.com/AficaLabs/cardano-operator/internal/webhook"
 
 	// Import metrics package to register Prometheus metrics
 	_ "github.com/AficaLabs/cardano-operator/internal/metrics"
@@ -244,6 +245,16 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KESRotation")
+		os.Exit(1)
+	}
+
+	// Setup validation webhooks
+	if err := cardanowebhook.SetupStakePoolWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "StakePool")
+		os.Exit(1)
+	}
+	if err := cardanowebhook.SetupCardanoNodeWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "CardanoNode")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
