@@ -26,6 +26,7 @@ import (
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -39,6 +40,9 @@ import (
 
 	cardanov1alpha1 "github.com/AficaLabs/cardano-operator/api/v1alpha1"
 	"github.com/AficaLabs/cardano-operator/internal/controller"
+
+	// Import metrics package to register Prometheus metrics
+	_ "github.com/AficaLabs/cardano-operator/internal/metrics"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -81,13 +85,25 @@ func main() {
 	flag.StringVar(&metricsCertKey, "metrics-cert-key", "tls.key", "The name of the metrics server key file.")
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
+
+	// Configure structured logging with zap
+	// In production mode (default), logs are JSON formatted for machine parsing
+	// In development mode (--zap-devel), logs are human-readable with colors
 	opts := zap.Options{
-		Development: true,
+		Development: false, // Production mode by default (JSON format)
+		TimeEncoder: zapcore.ISO8601TimeEncoder,
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+	// Create logger with configured options
+	// Security: Keys and sensitive data should NEVER be logged
+	// Controllers must use structured logging with safe field names
+	logger := zap.New(
+		zap.UseFlagOptions(&opts),
+		zap.StacktraceLevel(zapcore.ErrorLevel), // Only stacktrace on errors
+	)
+	ctrl.SetLogger(logger)
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will
