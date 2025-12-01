@@ -360,3 +360,30 @@ catalog-build: opm ## Build a catalog image.
 .PHONY: catalog-push
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
+
+##@ Helm
+
+HELM ?= helm
+HELM_CHART_DIR ?= charts/cardano-operator
+
+.PHONY: helm-lint
+helm-lint: ## Lint the Helm chart.
+	$(HELM) lint $(HELM_CHART_DIR)
+
+.PHONY: helm-package
+helm-package: ## Package the Helm chart.
+	$(HELM) package $(HELM_CHART_DIR) -d dist/
+
+.PHONY: helm-template
+helm-template: ## Render Helm chart templates locally.
+	$(HELM) template cardano-operator $(HELM_CHART_DIR)
+
+##@ Code Quality
+
+.PHONY: coverage
+coverage: test ## Generate and display test coverage report.
+	go tool cover -html=cover.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+
+.PHONY: verify
+verify: fmt vet lint test ## Run all verification checks (fmt, vet, lint, test).
