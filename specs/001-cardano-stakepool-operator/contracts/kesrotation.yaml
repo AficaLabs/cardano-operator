@@ -1,0 +1,132 @@
+# KESRotation CRD Schema
+# API Group: cardano.org
+# Version: v1alpha1
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: kesrotations.cardano.org
+spec:
+  group: cardano.org
+  names:
+    kind: KESRotation
+    listKind: KESRotationList
+    plural: kesrotations
+    singular: kesrotation
+    shortNames:
+      - kes
+    categories:
+      - cardano
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Pool
+          type: string
+          jsonPath: .spec.stakePoolRef
+        - name: KES Period
+          type: integer
+          jsonPath: .status.currentKESPeriod
+        - name: Expiry Epoch
+          type: integer
+          jsonPath: .status.kesExpiryEpoch
+        - name: Next Rotation
+          type: integer
+          jsonPath: .status.nextRotationEpoch
+        - name: Auto
+          type: boolean
+          jsonPath: .spec.autoRotate
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              required:
+                - stakePoolRef
+              properties:
+                stakePoolRef:
+                  type: string
+                  description: Associated StakePool name
+                autoRotate:
+                  type: boolean
+                  default: true
+                  description: Enable automatic KES rotation
+                rotationLeadEpochs:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  default: 2
+                  description: Epochs before expiry to trigger rotation
+                maxKESEvolutions:
+                  type: integer
+                  default: 62
+                  description: Maximum KES evolutions (protocol parameter)
+            status:
+              type: object
+              properties:
+                currentKESPeriod:
+                  type: integer
+                  description: Current KES period number
+                kesStartSlot:
+                  type: integer
+                  description: Slot when current KES became active
+                kesExpiryEpoch:
+                  type: integer
+                  description: Epoch when current KES expires
+                nextRotationEpoch:
+                  type: integer
+                  description: Planned rotation epoch
+                rotationInProgress:
+                  type: boolean
+                  description: Whether a rotation is currently in progress
+                lastRotationTime:
+                  type: string
+                  format: date-time
+                rotationHistory:
+                  type: array
+                  maxItems: 10
+                  items:
+                    type: object
+                    properties:
+                      kesPeriod:
+                        type: integer
+                      rotatedAt:
+                        type: string
+                        format: date-time
+                      expiryEpoch:
+                        type: integer
+                      certificateTxHash:
+                        type: string
+                      success:
+                        type: boolean
+                      errorMessage:
+                        type: string
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
