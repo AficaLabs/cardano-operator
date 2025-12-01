@@ -98,7 +98,7 @@ func (um *UTxOManager) SelectUTxOs(ctx context.Context, address string, targetLo
 		return utxos[i].Value.Lovelace > utxos[j].Value.Lovelace
 	})
 
-	var selected []UTxO
+	selected := make([]UTxO, 0, len(utxos))
 	var total int64
 
 	// Simple greedy selection
@@ -230,7 +230,7 @@ func (um *UTxOManager) SelectUTxOsWithStrategy(ctx context.Context, address stri
 		})
 	}
 
-	var selected []UTxO
+	selected := make([]UTxO, 0, len(utxos))
 	var total int64
 
 	for _, utxo := range utxos {

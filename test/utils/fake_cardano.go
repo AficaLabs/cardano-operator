@@ -59,27 +59,27 @@ type FakeCardanoClient struct {
 	KESPeriodResponse          int64
 
 	// Error injection
-	QueryTipError                    error
-	QueryUTxOError                   error
-	QueryProtocolParametersError     error
-	QueryPoolParamsError             error
-	QueryStakePoolIDError            error
-	GenerateColdKeysError            error
-	GenerateVRFKeysError             error
-	GenerateKESKeysError             error
-	GeneratePaymentKeysError         error
-	GenerateStakeKeysError           error
-	CreateOpCertError                error
-	CreateRegistrationCertError      error
-	CreateUpdateCertError            error
-	CreateRetirementCertError        error
-	BuildTxError                     error
-	SignTxError                      error
-	SubmitTxError                    error
-	BuildAddressError                error
-	BuildStakeAddressError           error
-	CalculateMinFeeError             error
-	GetCurrentKESPeriodError         error
+	QueryTipError                error
+	QueryUTxOError               error
+	QueryProtocolParametersError error
+	QueryPoolParamsError         error
+	QueryStakePoolIDError        error
+	GenerateColdKeysError        error
+	GenerateVRFKeysError         error
+	GenerateKESKeysError         error
+	GeneratePaymentKeysError     error
+	GenerateStakeKeysError       error
+	CreateOpCertError            error
+	CreateRegistrationCertError  error
+	CreateUpdateCertError        error
+	CreateRetirementCertError    error
+	BuildTxError                 error
+	SignTxError                  error
+	SubmitTxError                error
+	BuildAddressError            error
+	BuildStakeAddressError       error
+	CalculateMinFeeError         error
+	GetCurrentKESPeriodError     error
 
 	// Call recording
 	Calls []CallRecord
@@ -104,18 +104,18 @@ func NewFakeCardanoClient() *FakeCardanoClient {
 			},
 		},
 		ProtocolParametersResponse: &cardano.ProtocolParameters{
-			MinFeeA:            44,
-			MinFeeB:            155381,
-			MaxBlockSize:       90112,
-			MaxTxSize:          16384,
-			KeyDeposit:         2000000,
-			PoolDeposit:        500000000,
-			MaxEpoch:           18,
-			NOpt:               500,
+			MinFeeA:             44,
+			MinFeeB:             155381,
+			MaxBlockSize:        90112,
+			MaxTxSize:           16384,
+			KeyDeposit:          2000000,
+			PoolDeposit:         500000000,
+			MaxEpoch:            18,
+			NOpt:                500,
 			PoolPledgeInfluence: "0.3",
-			MinPoolCost:        340000000,
-			SlotsPerKESPeriod:  129600,
-			MaxKESEvolutions:   62,
+			MinPoolCost:         340000000,
+			SlotsPerKESPeriod:   129600,
+			MaxKESEvolutions:    62,
 		},
 		PoolParamsResponse: &cardano.PoolParams{
 			PoolID:     "pool1abc...",
@@ -295,7 +295,9 @@ func (f *FakeCardanoClient) GenerateStakeKeys(ctx context.Context) (*cardano.Key
 
 // Certificate operations
 
-func (f *FakeCardanoClient) CreateOperationalCertificate(ctx context.Context, kesSKey []byte, coldSKey []byte, counter int64, kesPeriod int64) (*cardano.OperationalCertificate, error) {
+func (f *FakeCardanoClient) CreateOperationalCertificate(
+	ctx context.Context, kesSKey []byte, coldSKey []byte, counter int64, kesPeriod int64,
+) (*cardano.OperationalCertificate, error) {
 	f.recordCall("CreateOperationalCertificate", kesSKey, coldSKey, counter, kesPeriod)
 	if f.CreateOpCertError != nil {
 		return nil, f.CreateOpCertError
@@ -303,7 +305,9 @@ func (f *FakeCardanoClient) CreateOperationalCertificate(ctx context.Context, ke
 	return f.OpCertResponse, nil
 }
 
-func (f *FakeCardanoClient) CreatePoolRegistrationCertificate(ctx context.Context, params *cardano.PoolParams, coldVKey []byte) ([]byte, error) {
+func (f *FakeCardanoClient) CreatePoolRegistrationCertificate(
+	ctx context.Context, params *cardano.PoolParams, coldVKey []byte,
+) ([]byte, error) {
 	f.recordCall("CreatePoolRegistrationCertificate", params, coldVKey)
 	if f.CreateRegistrationCertError != nil {
 		return nil, f.CreateRegistrationCertError
@@ -311,7 +315,9 @@ func (f *FakeCardanoClient) CreatePoolRegistrationCertificate(ctx context.Contex
 	return f.RegistrationCertResponse, nil
 }
 
-func (f *FakeCardanoClient) CreatePoolUpdateCertificate(ctx context.Context, params *cardano.PoolParams, coldVKey []byte) ([]byte, error) {
+func (f *FakeCardanoClient) CreatePoolUpdateCertificate(
+	ctx context.Context, params *cardano.PoolParams, coldVKey []byte,
+) ([]byte, error) {
 	f.recordCall("CreatePoolUpdateCertificate", params, coldVKey)
 	if f.CreateUpdateCertError != nil {
 		return nil, f.CreateUpdateCertError
@@ -319,7 +325,9 @@ func (f *FakeCardanoClient) CreatePoolUpdateCertificate(ctx context.Context, par
 	return f.UpdateCertResponse, nil
 }
 
-func (f *FakeCardanoClient) CreatePoolRetirementCertificate(ctx context.Context, poolID string, retirementEpoch int64, coldVKey []byte) ([]byte, error) {
+func (f *FakeCardanoClient) CreatePoolRetirementCertificate(
+	ctx context.Context, poolID string, retirementEpoch int64, coldVKey []byte,
+) ([]byte, error) {
 	f.recordCall("CreatePoolRetirementCertificate", poolID, retirementEpoch, coldVKey)
 	if f.CreateRetirementCertError != nil {
 		return nil, f.CreateRetirementCertError
@@ -482,7 +490,7 @@ func (f *FakeCardanoClient) SimulateKESExpiringSoon(currentEpoch int64, expiryEp
 	f.TipResponse = &cardano.Tip{
 		Slot:      currentEpoch * 432000, // Approximate slot for epoch
 		Epoch:     currentEpoch,
-		Block:     int64(currentEpoch * 21600),
+		Block:     currentEpoch * 21600,
 		Hash:      "abc123",
 		SyncState: "100.00",
 	}

@@ -120,8 +120,8 @@ func (pt *ProtocolTracker) GetEpochInfo(ctx context.Context) (*EpochInfo, error)
 	}
 
 	// Cardano constants (these vary by network, simplified here)
-	var epochLength int64 = 432000  // 5 days in slots (for mainnet)
-	var slotLength float64 = 1.0    // 1 second per slot
+	epochLength := int64(432000) // 5 days in slots (for mainnet)
+	slotLength := 1.0            // 1 second per slot
 
 	// Calculate epoch start slot and slot within epoch
 	epochStartSlot := tip.Epoch * epochLength
@@ -239,7 +239,7 @@ func ValidatePoolMargin(margin float64) error {
 // NetworkConstants contains network-specific constants
 type NetworkConstants struct {
 	NetworkMagic      int64
-	EpochLength       int64 // slots
+	EpochLength       int64   // slots
 	SlotLength        float64 // seconds
 	ActiveSlotCoeff   float64
 	SecurityParam     int64
@@ -270,7 +270,7 @@ func GetNetworkConstants(network Network) *NetworkConstants {
 	case NetworkPreview:
 		return &NetworkConstants{
 			NetworkMagic:      2,
-			EpochLength:       86400,  // 1 day
+			EpochLength:       86400, // 1 day
 			SlotLength:        1.0,
 			ActiveSlotCoeff:   0.05,
 			SecurityParam:     432,

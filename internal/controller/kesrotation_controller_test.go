@@ -22,23 +22,22 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cardanov1alpha1 "github.com/AficaLabs/cardano-operator/api/v1alpha1"
 )
 
 var _ = Describe("KESRotation Controller", func() {
 	Context("When reconciling a resource", func() {
-		const resourceName = "test-resource"
+		const resourceName = "test-kesrotation"
 
 		ctx := context.Background()
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: "default",
 		}
 		kesrotation := &cardanov1alpha1.KESRotation{}
 
@@ -46,26 +45,20 @@ var _ = Describe("KESRotation Controller", func() {
 			By("creating the custom resource for the Kind KESRotation")
 			err := k8sClient.Get(ctx, typeNamespacedName, kesrotation)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &cardanov1alpha1.KESRotation{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: "default",
-					},
-					// TODO(user): Specify other spec details if needed.
-				}
+				resource := newValidKESRotation(resourceName, "default")
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
 			resource := &cardanov1alpha1.KESRotation{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Cleanup the specific resource instance KESRotation")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+			if err == nil {
+				By("Cleanup the specific resource instance KESRotation")
+				Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+			}
 		})
+
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 			controllerReconciler := &KESRotationReconciler{
@@ -77,8 +70,21 @@ var _ = Describe("KESRotation Controller", func() {
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
 		})
 	})
 })
+
+// newValidKESRotation creates a valid KESRotation for testing
+func newValidKESRotation(name, namespace string) *cardanov1alpha1.KESRotation {
+	return &cardanov1alpha1.KESRotation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: cardanov1alpha1.KESRotationSpec{
+			StakePoolRef:       "test-stakepool",
+			AutoRotate:         true,
+			RotationLeadEpochs: 2,
+		},
+	}
+}

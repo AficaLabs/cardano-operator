@@ -26,11 +26,11 @@ import (
 type KeyType string
 
 const (
-	KeyTypeCold         KeyType = "cold"
-	KeyTypeVRF          KeyType = "vrf"
-	KeyTypeKES          KeyType = "kes"
-	KeyTypePayment      KeyType = "payment"
-	KeyTypeStake        KeyType = "stake"
+	KeyTypeCold    KeyType = "cold"
+	KeyTypeVRF     KeyType = "vrf"
+	KeyTypeKES     KeyType = "kes"
+	KeyTypePayment KeyType = "payment"
+	KeyTypeStake   KeyType = "stake"
 )
 
 // KeyEnvelope represents a Cardano key in envelope format
@@ -188,14 +188,14 @@ func ValidateKeyType(data []byte, expectedType string) error {
 
 // Key type constants for validation
 const (
-	KeyTypeColdSigning           = "StakePoolSigningKey_ed25519"
-	KeyTypeColdVerification      = "StakePoolVerificationKey_ed25519"
-	KeyTypeVRFSigning            = "VrfSigningKey_PraosVRF"
-	KeyTypeVRFVerification       = "VrfVerificationKey_PraosVRF"
-	KeyTypeKESSigning            = "KesSigningKey_ed25519_kes_2^6"
-	KeyTypeKESVerification       = "KesVerificationKey_ed25519_kes_2^6"
-	KeyTypePaymentSigning        = "PaymentSigningKeyShelley_ed25519"
-	KeyTypePaymentVerification   = "PaymentVerificationKeyShelley_ed25519"
-	KeyTypeStakeSigning          = "StakeSigningKeyShelley_ed25519"
-	KeyTypeStakeVerification     = "StakeVerificationKeyShelley_ed25519"
+	KeyTypeColdSigning         = "StakePoolSigningKey_ed25519"
+	KeyTypeColdVerification    = "StakePoolVerificationKey_ed25519"
+	KeyTypeVRFSigning          = "VrfSigningKey_PraosVRF"
+	KeyTypeVRFVerification     = "VrfVerificationKey_PraosVRF"
+	KeyTypeKESSigning          = "KesSigningKey_ed25519_kes_2^6"
+	KeyTypeKESVerification     = "KesVerificationKey_ed25519_kes_2^6"
+	KeyTypePaymentSigning      = "PaymentSigningKeyShelley_ed25519"
+	KeyTypePaymentVerification = "PaymentVerificationKeyShelley_ed25519"
+	KeyTypeStakeSigning        = "StakeSigningKeyShelley_ed25519"
+	KeyTypeStakeVerification   = "StakeVerificationKeyShelley_ed25519"
 )

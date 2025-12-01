@@ -88,7 +88,7 @@ func NewTestStakePool(name, namespace string, opts ...StakePoolOption) *cardanov
 				NodeVersion: "10.1.4",
 			},
 			KeyManagement: cardanov1alpha1.KeyManagement{
-				Mode:                   cardanov1alpha1.KeyManagementModeManaged,
+				Mode:                  cardanov1alpha1.KeyManagementModeManaged,
 				KESRotationLeadEpochs: 2,
 			},
 			PaymentConfig: cardanov1alpha1.PaymentConfig{
@@ -358,7 +358,9 @@ func WithKESExpiryEpoch(epoch int64) KESRotationOption {
 type OfflineSigningNodeOption func(*cardanov1alpha1.OfflineSigningNode)
 
 // NewTestOfflineSigningNode creates a valid OfflineSigningNode for testing
-func NewTestOfflineSigningNode(name, namespace string, opts ...OfflineSigningNodeOption) *cardanov1alpha1.OfflineSigningNode {
+func NewTestOfflineSigningNode(
+	name, namespace string, opts ...OfflineSigningNodeOption,
+) *cardanov1alpha1.OfflineSigningNode {
 	osn := &cardanov1alpha1.OfflineSigningNode{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -418,6 +420,9 @@ func NewTestRelayNode(name, namespace string) *cardanov1alpha1.CardanoNode {
 
 // NewTestPaymentSecret creates a Secret containing payment keys for testing
 func NewTestPaymentSecret(name, namespace string) *corev1.Secret {
+	// nolint:lll // JSON key format requires specific structure
+	paymentSKey := `{"type": "PaymentSigningKeyShelley_ed25519", "cborHex": "5820..."}`
+	paymentVKey := `{"type": "PaymentVerificationKeyShelley_ed25519", "cborHex": "5820..."}`
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -425,14 +430,18 @@ func NewTestPaymentSecret(name, namespace string) *corev1.Secret {
 		},
 		Type: corev1.SecretTypeOpaque,
 		Data: map[string][]byte{
-			"payment.skey": []byte(`{"type": "PaymentSigningKeyShelley_ed25519", "description": "Payment Signing Key", "cborHex": "5820..."}`),
-			"payment.vkey": []byte(`{"type": "PaymentVerificationKeyShelley_ed25519", "description": "Payment Verification Key", "cborHex": "5820..."}`),
+			"payment.skey": []byte(paymentSKey),
+			"payment.vkey": []byte(paymentVKey),
 		},
 	}
 }
 
 // NewTestColdKeySecret creates a Secret containing cold keys for testing
 func NewTestColdKeySecret(name, namespace string) *corev1.Secret {
+	// nolint:lll // JSON key format requires specific structure
+	coldSKey := `{"type": "StakePoolSigningKey_ed25519", "cborHex": "5820..."}`
+	coldVKey := `{"type": "StakePoolVerificationKey_ed25519", "cborHex": "5820..."}`
+	coldCounter := `{"type": "NodeOperationalCertificateIssueCounter", "cborHex": "8200..."}`
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -440,9 +449,9 @@ func NewTestColdKeySecret(name, namespace string) *corev1.Secret {
 		},
 		Type: corev1.SecretTypeOpaque,
 		Data: map[string][]byte{
-			"cold.skey":    []byte(`{"type": "StakePoolSigningKey_ed25519", "description": "Stake Pool Cold Signing Key", "cborHex": "5820..."}`),
-			"cold.vkey":    []byte(`{"type": "StakePoolVerificationKey_ed25519", "description": "Stake Pool Cold Verification Key", "cborHex": "5820..."}`),
-			"cold.counter": []byte(`{"type": "NodeOperationalCertificateIssueCounter", "description": "Next certificate issue number: 1", "cborHex": "8200..."}`),
+			"cold.skey":    []byte(coldSKey),
+			"cold.vkey":    []byte(coldVKey),
+			"cold.counter": []byte(coldCounter),
 		},
 	}
 }

@@ -223,9 +223,8 @@ func validateTopology(topology *cardanov1alpha1.TopologyConfig, nodeType cardano
 	case cardanov1alpha1.TopologyModeP2P:
 		// P2P mode is valid for relay nodes
 		// Block producers typically use static topology to their relays
-		if nodeType == cardanov1alpha1.CardanoNodeTypeBlockProducer {
-			// This is a warning case, not an error - handled in validate functions
-		}
+		// This is a warning case, not an error - warnings are handled in validate functions
+		_ = nodeType // Intentionally unused here; warning logic is in validateCardanoNode
 	default:
 		return fmt.Errorf("invalid topology mode: %s (must be static or p2p)", topology.Mode)
 	}

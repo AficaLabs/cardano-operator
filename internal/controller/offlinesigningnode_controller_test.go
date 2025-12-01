@@ -22,23 +22,22 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cardanov1alpha1 "github.com/AficaLabs/cardano-operator/api/v1alpha1"
 )
 
 var _ = Describe("OfflineSigningNode Controller", func() {
 	Context("When reconciling a resource", func() {
-		const resourceName = "test-resource"
+		const resourceName = "test-offlinesigningnode"
 
 		ctx := context.Background()
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: "default",
 		}
 		offlinesigningnode := &cardanov1alpha1.OfflineSigningNode{}
 
@@ -46,26 +45,20 @@ var _ = Describe("OfflineSigningNode Controller", func() {
 			By("creating the custom resource for the Kind OfflineSigningNode")
 			err := k8sClient.Get(ctx, typeNamespacedName, offlinesigningnode)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &cardanov1alpha1.OfflineSigningNode{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: "default",
-					},
-					// TODO(user): Specify other spec details if needed.
-				}
+				resource := newValidOfflineSigningNode(resourceName, "default")
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
 			resource := &cardanov1alpha1.OfflineSigningNode{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Cleanup the specific resource instance OfflineSigningNode")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+			if err == nil {
+				By("Cleanup the specific resource instance OfflineSigningNode")
+				Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+			}
 		})
+
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 			controllerReconciler := &OfflineSigningNodeReconciler{
@@ -77,8 +70,20 @@ var _ = Describe("OfflineSigningNode Controller", func() {
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
 		})
 	})
 })
+
+// newValidOfflineSigningNode creates a valid OfflineSigningNode for testing
+func newValidOfflineSigningNode(name, namespace string) *cardanov1alpha1.OfflineSigningNode {
+	return &cardanov1alpha1.OfflineSigningNode{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: cardanov1alpha1.OfflineSigningNodeSpec{
+			StakePoolRef: "test-stakepool",
+			SigningMode:  cardanov1alpha1.SigningModeManual,
+		},
+	}
+}

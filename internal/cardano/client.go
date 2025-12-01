@@ -48,24 +48,24 @@ type UTxO struct {
 
 // Value represents the value in a UTxO
 type Value struct {
-	Lovelace int64             `json:"lovelace"`
-	Assets   map[string]int64  `json:"assets,omitempty"`
+	Lovelace int64            `json:"lovelace"`
+	Assets   map[string]int64 `json:"assets,omitempty"`
 }
 
 // ProtocolParameters represents the current protocol parameters
 type ProtocolParameters struct {
-	MinFeeA            int64  `json:"txFeePerByte"`
-	MinFeeB            int64  `json:"txFeeFixed"`
-	MaxBlockSize       int64  `json:"maxBlockBodySize"`
-	MaxTxSize          int64  `json:"maxTxSize"`
-	KeyDeposit         int64  `json:"stakeAddressDeposit"`
-	PoolDeposit        int64  `json:"stakePoolDeposit"`
-	MaxEpoch           int64  `json:"poolRetireMaxEpoch"`
-	NOpt               int64  `json:"stakePoolTargetNum"`
+	MinFeeA             int64  `json:"txFeePerByte"`
+	MinFeeB             int64  `json:"txFeeFixed"`
+	MaxBlockSize        int64  `json:"maxBlockBodySize"`
+	MaxTxSize           int64  `json:"maxTxSize"`
+	KeyDeposit          int64  `json:"stakeAddressDeposit"`
+	PoolDeposit         int64  `json:"stakePoolDeposit"`
+	MaxEpoch            int64  `json:"poolRetireMaxEpoch"`
+	NOpt                int64  `json:"stakePoolTargetNum"`
 	PoolPledgeInfluence string `json:"poolPledgeInfluence"`
-	MinPoolCost        int64  `json:"minPoolCost"`
-	SlotsPerKESPeriod  int64  `json:"slotsPerKESPeriod"`
-	MaxKESEvolutions   int64  `json:"maxKESEvolutions"`
+	MinPoolCost         int64  `json:"minPoolCost"`
+	SlotsPerKESPeriod   int64  `json:"slotsPerKESPeriod"`
+	MaxKESEvolutions    int64  `json:"maxKESEvolutions"`
 }
 
 // PoolParams represents stake pool parameters for registration
@@ -99,10 +99,10 @@ type KeyPair struct {
 
 // OperationalCertificate represents a KES operational certificate
 type OperationalCertificate struct {
-	Certificate    []byte `json:"certificate"`
-	Counter        int64  `json:"counter"`
-	KESPeriod      int64  `json:"kesPeriod"`
-	ExpiryEpoch    int64  `json:"expiryEpoch"`
+	Certificate []byte `json:"certificate"`
+	Counter     int64  `json:"counter"`
+	KESPeriod   int64  `json:"kesPeriod"`
+	ExpiryEpoch int64  `json:"expiryEpoch"`
 }
 
 // TransactionSubmitResult represents the result of submitting a transaction

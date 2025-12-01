@@ -38,9 +38,9 @@ const (
 type CardanoNodeType string
 
 const (
-	CardanoNodeTypeBlockProducer   CardanoNodeType = "block-producer"
-	CardanoNodeTypeRelay           CardanoNodeType = "relay"
-	CardanoNodeTypeOfflineSigning  CardanoNodeType = "offline-signing"
+	CardanoNodeTypeBlockProducer  CardanoNodeType = "block-producer"
+	CardanoNodeTypeRelay          CardanoNodeType = "relay"
+	CardanoNodeTypeOfflineSigning CardanoNodeType = "offline-signing"
 )
 
 // TopologyMode defines the peer topology mode

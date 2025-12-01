@@ -192,6 +192,10 @@ func validatePoolParams(params *cardanov1alpha1.PoolParams, network cardanov1alp
 	if pledge < 0 {
 		return fmt.Errorf("pledge cannot be negative")
 	}
+	// Mainnet pools should have a reasonable pledge (at least 1 ADA)
+	if network == cardanov1alpha1.NetworkMainnet && pledge < 1000000 {
+		return fmt.Errorf("mainnet pools should have at least 1 ADA pledge (1000000 lovelace)")
+	}
 
 	// Validate margin is between 0.0 and 1.0
 	margin, err := strconv.ParseFloat(params.Margin, 64)

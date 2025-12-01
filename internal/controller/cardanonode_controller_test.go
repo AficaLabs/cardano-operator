@@ -21,24 +21,25 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cardanov1alpha1 "github.com/AficaLabs/cardano-operator/api/v1alpha1"
 )
 
 var _ = Describe("CardanoNode Controller", func() {
 	Context("When reconciling a resource", func() {
-		const resourceName = "test-resource"
+		const resourceName = "test-cardanonode"
 
 		ctx := context.Background()
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: "default",
 		}
 		cardanonode := &cardanov1alpha1.CardanoNode{}
 
@@ -46,26 +47,20 @@ var _ = Describe("CardanoNode Controller", func() {
 			By("creating the custom resource for the Kind CardanoNode")
 			err := k8sClient.Get(ctx, typeNamespacedName, cardanonode)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &cardanov1alpha1.CardanoNode{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: "default",
-					},
-					// TODO(user): Specify other spec details if needed.
-				}
+				resource := newValidCardanoNode(resourceName, "default")
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
 			resource := &cardanov1alpha1.CardanoNode{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Cleanup the specific resource instance CardanoNode")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+			if err == nil {
+				By("Cleanup the specific resource instance CardanoNode")
+				Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+			}
 		})
+
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 			controllerReconciler := &CardanoNodeReconciler{
@@ -77,8 +72,37 @@ var _ = Describe("CardanoNode Controller", func() {
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
 		})
 	})
 })
+
+// newValidCardanoNode creates a valid CardanoNode for testing
+func newValidCardanoNode(name, namespace string) *cardanov1alpha1.CardanoNode {
+	return &cardanov1alpha1.CardanoNode{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: cardanov1alpha1.CardanoNodeSpec{
+			Type:        cardanov1alpha1.CardanoNodeTypeRelay,
+			Network:     cardanov1alpha1.NetworkPreprod,
+			NodeVersion: "10.1.4",
+			Topology: &cardanov1alpha1.TopologyConfig{
+				Mode: cardanov1alpha1.TopologyModeP2P,
+				P2PConfig: &cardanov1alpha1.P2PConfig{
+					TargetNumberOfActivePeers:      20,
+					TargetNumberOfEstablishedPeers: 40,
+				},
+			},
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("1"),
+					corev1.ResourceMemory: resource.MustParse("4Gi"),
+				},
+			},
+			Storage: cardanov1alpha1.StorageConfig{
+				Size: "200Gi",
+			},
+		},
+	}
+}

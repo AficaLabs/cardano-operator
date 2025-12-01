@@ -118,7 +118,7 @@ func (e *Executor) QueryUTxO(ctx context.Context, address string) ([]UTxO, error
 		return nil, fmt.Errorf("failed to parse utxo response: %w", err)
 	}
 
-	var utxos []UTxO
+	utxos := make([]UTxO, 0, len(utxoMap))
 	for key, val := range utxoMap {
 		parts := strings.Split(key, "#")
 		if len(parts) != 2 {
@@ -228,7 +228,7 @@ func (e *Executor) generateKeyPair(ctx context.Context, category, command, vkeyF
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	vkeyPath := filepath.Join(tmpDir, "key.vkey")
 	skeyPath := filepath.Join(tmpDir, "key.skey")
@@ -261,7 +261,7 @@ func (e *Executor) CreateOperationalCertificate(ctx context.Context, kesSKey []b
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	kesVKeyPath := filepath.Join(tmpDir, "kes.vkey")
 	coldSKeyPath := filepath.Join(tmpDir, "cold.skey")
@@ -345,7 +345,7 @@ func (e *Executor) createPoolCertificate(ctx context.Context, params *PoolParams
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	coldVKeyPath := filepath.Join(tmpDir, "cold.vkey")
 	vrfVKeyPath := filepath.Join(tmpDir, "vrf.vkey")
@@ -368,8 +368,8 @@ func (e *Executor) createPoolCertificate(ctx context.Context, params *PoolParams
 		"--pool-pledge", strconv.FormatInt(params.Pledge, 10),
 		"--pool-cost", strconv.FormatInt(params.Cost, 10),
 		"--pool-margin", fmt.Sprintf("%.4f", params.Margin),
-		"--pool-reward-account-verification-key-file", coldVKeyPath, // Simplified
-		"--pool-owner-stake-verification-key-file", coldVKeyPath,    // Simplified
+		"--pool-reward-account-verification-key-file", coldVKeyPath,
+		"--pool-owner-stake-verification-key-file", coldVKeyPath,
 		"--out-file", certPath,
 	}
 	args = append(args, e.networkArgs()...)
@@ -412,7 +412,7 @@ func (e *Executor) CreatePoolRetirementCertificate(ctx context.Context, poolID s
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	coldVKeyPath := filepath.Join(tmpDir, "cold.vkey")
 	certPath := filepath.Join(tmpDir, "retire.cert")
@@ -441,7 +441,7 @@ func (e *Executor) BuildTx(ctx context.Context, opts *TxBuildOptions) ([]byte, e
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	txBodyPath := filepath.Join(tmpDir, "tx.raw")
 
@@ -486,7 +486,7 @@ func (e *Executor) SignTx(ctx context.Context, txBody []byte, signingKeys ...[]b
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	txBodyPath := filepath.Join(tmpDir, "tx.raw")
 	txSignedPath := filepath.Join(tmpDir, "tx.signed")
@@ -522,7 +522,7 @@ func (e *Executor) SubmitTx(ctx context.Context, signedTx []byte) (*TransactionS
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	txPath := filepath.Join(tmpDir, "tx.signed")
 	if err := os.WriteFile(txPath, signedTx, 0600); err != nil {
@@ -560,7 +560,7 @@ func (e *Executor) BuildAddress(ctx context.Context, paymentVKey []byte, stakeVK
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	paymentVKeyPath := filepath.Join(tmpDir, "payment.vkey")
 	stakeVKeyPath := filepath.Join(tmpDir, "stake.vkey")
@@ -594,7 +594,7 @@ func (e *Executor) BuildStakeAddress(ctx context.Context, stakeVKey []byte) (str
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	stakeVKeyPath := filepath.Join(tmpDir, "stake.vkey")
 	if err := os.WriteFile(stakeVKeyPath, stakeVKey, 0600); err != nil {
@@ -621,7 +621,7 @@ func (e *Executor) CalculateMinFee(ctx context.Context, txBody []byte, witnessCo
 	if err != nil {
 		return 0, fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	txBodyPath := filepath.Join(tmpDir, "tx.raw")
 	protocolPath := filepath.Join(tmpDir, "protocol.json")

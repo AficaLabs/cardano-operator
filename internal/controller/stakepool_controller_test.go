@@ -21,24 +21,25 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cardanov1alpha1 "github.com/AficaLabs/cardano-operator/api/v1alpha1"
 )
 
 var _ = Describe("StakePool Controller", func() {
 	Context("When reconciling a resource", func() {
-		const resourceName = "test-resource"
+		const resourceName = "test-stakepool"
 
 		ctx := context.Background()
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: "default",
 		}
 		stakepool := &cardanov1alpha1.StakePool{}
 
@@ -46,26 +47,20 @@ var _ = Describe("StakePool Controller", func() {
 			By("creating the custom resource for the Kind StakePool")
 			err := k8sClient.Get(ctx, typeNamespacedName, stakepool)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &cardanov1alpha1.StakePool{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: "default",
-					},
-					// TODO(user): Specify other spec details if needed.
-				}
+				resource := newValidStakePool(resourceName, "default")
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
 			resource := &cardanov1alpha1.StakePool{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Cleanup the specific resource instance StakePool")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+			if err == nil {
+				By("Cleanup the specific resource instance StakePool")
+				Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+			}
 		})
+
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 			controllerReconciler := &StakePoolReconciler{
@@ -77,8 +72,65 @@ var _ = Describe("StakePool Controller", func() {
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
 		})
 	})
 })
+
+// newValidStakePool creates a valid StakePool for testing
+func newValidStakePool(name, namespace string) *cardanov1alpha1.StakePool {
+	return &cardanov1alpha1.StakePool{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: cardanov1alpha1.StakePoolSpec{
+			Network: cardanov1alpha1.NetworkPreprod,
+			PoolParams: cardanov1alpha1.PoolParams{
+				Pledge: "500000000000",
+				Margin: "0.03",
+				Cost:   "340000000",
+				Metadata: cardanov1alpha1.PoolMetadata{
+					URL:  "https://example.com/pool.json",
+					Hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+				},
+				Relays: []cardanov1alpha1.RelayConfig{
+					{
+						Type:     cardanov1alpha1.RelayTypeDNS,
+						Hostname: "relay1.example.com",
+						Port:     6000,
+					},
+				},
+			},
+			NodeConfig: cardanov1alpha1.NodeConfig{
+				BlockProducer: cardanov1alpha1.NodeSpec{
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("2"),
+							corev1.ResourceMemory: resource.MustParse("8Gi"),
+						},
+					},
+				},
+				RelayCount: 1,
+				RelaySpec: cardanov1alpha1.NodeSpec{
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("1"),
+							corev1.ResourceMemory: resource.MustParse("4Gi"),
+						},
+					},
+				},
+				NodeVersion: "10.1.4",
+			},
+			KeyManagement: cardanov1alpha1.KeyManagement{
+				Mode:                  cardanov1alpha1.KeyManagementModeManaged,
+				KESRotationLeadEpochs: 2,
+			},
+			PaymentConfig: cardanov1alpha1.PaymentConfig{
+				Mode: cardanov1alpha1.PaymentModeExternal,
+			},
+			Storage: cardanov1alpha1.StorageConfig{
+				Size: "200Gi",
+			},
+		},
+	}
+}
