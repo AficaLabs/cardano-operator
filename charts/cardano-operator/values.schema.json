@@ -1,0 +1,292 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["image", "replicaCount"],
+  "properties": {
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3,
+      "description": "Number of operator replicas"
+    },
+    "image": {
+      "type": "object",
+      "required": ["repository"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "description": "Image repository"
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "Never", "IfNotPresent"],
+          "description": "Image pull policy"
+        },
+        "tag": {
+          "type": "string",
+          "description": "Image tag"
+        }
+      }
+    },
+    "imagePullSecrets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Image pull secrets"
+    },
+    "nameOverride": {
+      "type": "string",
+      "description": "Override chart name"
+    },
+    "fullnameOverride": {
+      "type": "string",
+      "description": "Override full chart name"
+    },
+    "serviceAccount": {
+      "type": "object",
+      "properties": {
+        "create": {
+          "type": "boolean",
+          "description": "Create service account"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Service account annotations"
+        },
+        "name": {
+          "type": "string",
+          "description": "Service account name"
+        }
+      }
+    },
+    "podAnnotations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Pod annotations"
+    },
+    "podLabels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Pod labels"
+    },
+    "podSecurityContext": {
+      "type": "object",
+      "description": "Pod security context"
+    },
+    "securityContext": {
+      "type": "object",
+      "description": "Container security context"
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "limits": {
+          "type": "object",
+          "properties": {
+            "cpu": {
+              "type": "string"
+            },
+            "memory": {
+              "type": "string"
+            }
+          }
+        },
+        "requests": {
+          "type": "object",
+          "properties": {
+            "cpu": {
+              "type": "string"
+            },
+            "memory": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "description": "Resource requests and limits"
+    },
+    "nodeSelector": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Node selector"
+    },
+    "tolerations": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Pod tolerations"
+    },
+    "affinity": {
+      "type": "object",
+      "description": "Pod affinity"
+    },
+    "operator": {
+      "type": "object",
+      "properties": {
+        "leaderElection": {
+          "type": "boolean",
+          "description": "Enable leader election"
+        },
+        "healthProbeBindAddress": {
+          "type": "string",
+          "description": "Health probe bind address"
+        },
+        "metricsBindAddress": {
+          "type": "string",
+          "description": "Metrics bind address"
+        },
+        "metricsSecure": {
+          "type": "boolean",
+          "description": "Enable secure metrics"
+        },
+        "enableHTTP2": {
+          "type": "boolean",
+          "description": "Enable HTTP/2"
+        },
+        "logLevel": {
+          "type": "string",
+          "enum": ["debug", "info", "error"],
+          "description": "Log level"
+        },
+        "developmentMode": {
+          "type": "boolean",
+          "description": "Development mode logging"
+        }
+      }
+    },
+    "webhook": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable webhooks"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Webhook port"
+        },
+        "certDir": {
+          "type": "string",
+          "description": "Certificate directory"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "serviceMonitor": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable ServiceMonitor"
+            },
+            "additionalLabels": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "interval": {
+              "type": "string",
+              "description": "Scrape interval"
+            },
+            "scrapeTimeout": {
+              "type": "string",
+              "description": "Scrape timeout"
+            },
+            "metricRelabelings": {
+              "type": "array"
+            },
+            "relabelings": {
+              "type": "array"
+            }
+          }
+        }
+      }
+    },
+    "certManager": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Use cert-manager"
+        },
+        "issuerKind": {
+          "type": "string",
+          "enum": ["Issuer", "ClusterIssuer"],
+          "description": "Issuer kind"
+        },
+        "issuerName": {
+          "type": "string",
+          "description": "Issuer name"
+        }
+      }
+    },
+    "rbac": {
+      "type": "object",
+      "properties": {
+        "create": {
+          "type": "boolean",
+          "description": "Create RBAC resources"
+        }
+      }
+    },
+    "crds": {
+      "type": "object",
+      "properties": {
+        "install": {
+          "type": "boolean",
+          "description": "Install CRDs"
+        },
+        "keep": {
+          "type": "boolean",
+          "description": "Keep CRDs on uninstall"
+        }
+      }
+    },
+    "priorityClassName": {
+      "type": "string",
+      "description": "Priority class name"
+    },
+    "topologySpreadConstraints": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Topology spread constraints"
+    },
+    "cardano": {
+      "type": "object",
+      "properties": {
+        "nodeImage": {
+          "type": "string",
+          "description": "Default Cardano node image"
+        },
+        "cliImage": {
+          "type": "string",
+          "description": "Cardano CLI image"
+        }
+      }
+    }
+  }
+}

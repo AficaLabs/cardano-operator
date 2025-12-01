@@ -1,0 +1,149 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "cardano-operator.fullname" . }}-manager
+  labels:
+    {{- include "cardano-operator.labels" . | nindent 4 }}
+rules:
+  # Core Kubernetes resources
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+      - services
+      - persistentvolumeclaims
+      - events
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+    verbs:
+      - create
+  # Apps resources
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - statefulsets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  # Networking resources
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - networkpolicies
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  # Cardano CRDs
+  - apiGroups:
+      - cardano.org
+    resources:
+      - stakepools
+      - cardanonodes
+      - offlinesigningnodes
+      - kesrotations
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - cardano.org
+    resources:
+      - stakepools/status
+      - cardanonodes/status
+      - offlinesigningnodes/status
+      - kesrotations/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - cardano.org
+    resources:
+      - stakepools/finalizers
+      - cardanonodes/finalizers
+      - offlinesigningnodes/finalizers
+      - kesrotations/finalizers
+    verbs:
+      - update
+  # Leader election
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "cardano-operator.fullname" . }}-metrics-reader
+  labels:
+    {{- include "cardano-operator.labels" . | nindent 4 }}
+rules:
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "cardano-operator.fullname" . }}-metrics-auth-reader
+  labels:
+    {{- include "cardano-operator.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - authentication.k8s.io
+    resources:
+      - tokenreviews
+    verbs:
+      - create
+  - apiGroups:
+      - authorization.k8s.io
+    resources:
+      - subjectaccessreviews
+    verbs:
+      - create
+{{- end }}

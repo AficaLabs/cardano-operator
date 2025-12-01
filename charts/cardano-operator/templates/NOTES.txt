@@ -1,0 +1,63 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named {{ .Release.Name }}.
+
+To verify the operator is running:
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ include "cardano-operator.name" . }}
+
+To check the operator logs:
+  kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ include "cardano-operator.name" . }} -f
+
+{{- if .Values.metrics.serviceMonitor.enabled }}
+
+Prometheus ServiceMonitor is enabled. Metrics will be scraped at:
+  - Interval: {{ .Values.metrics.serviceMonitor.interval }}
+  - Scrape Timeout: {{ .Values.metrics.serviceMonitor.scrapeTimeout }}
+{{- end }}
+
+To create a stake pool, apply a StakePool resource:
+
+  cat <<EOF | kubectl apply -f -
+  apiVersion: cardano.org/v1alpha1
+  kind: StakePool
+  metadata:
+    name: my-pool
+    namespace: {{ .Release.Namespace }}
+  spec:
+    network: preprod
+    poolParams:
+      pledge: "500000000000"
+      margin: "0.03"
+      cost: "340000000"
+      metadata:
+        url: "https://example.com/pool-metadata.json"
+      relays:
+        - type: dns
+          hostname: relay1.example.com
+          port: 6000
+        - type: dns
+          hostname: relay2.example.com
+          port: 6000
+    nodeConfig:
+      relayCount: 2
+      blockProducer:
+        resources:
+          requests:
+            cpu: "2"
+            memory: "8Gi"
+      relaySpec:
+        resources:
+          requests:
+            cpu: "1"
+            memory: "4Gi"
+    keyManagement:
+      mode: managed
+    paymentConfig:
+      mode: external
+    storage:
+      size: "200Gi"
+  EOF
+
+For more information, visit:
+  - Documentation: https://github.com/AficaLabs/cardano-operator
+  - Issues: https://github.com/AficaLabs/cardano-operator/issues

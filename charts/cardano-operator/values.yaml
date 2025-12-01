@@ -1,0 +1,145 @@
+# Default values for cardano-operator.
+# This is a YAML-formatted file.
+
+# -- Number of operator replicas (only 1 active due to leader election)
+replicaCount: 1
+
+image:
+  # -- Image repository
+  repository: ghcr.io/aficalabs/cardano-operator
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Image tag (defaults to Chart appVersion)
+  tag: ""
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+# -- Override the name of the chart
+nameOverride: ""
+
+# -- Override the full name of the chart
+fullnameOverride: ""
+
+serviceAccount:
+  # -- Create a ServiceAccount
+  create: true
+  # -- Annotations to add to the ServiceAccount
+  annotations: {}
+  # -- Name of the ServiceAccount (auto-generated if not set)
+  name: ""
+
+# -- Pod annotations
+podAnnotations: {}
+
+# -- Pod labels
+podLabels: {}
+
+# -- Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+
+# -- Resource requests and limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# -- Node selector for pod scheduling
+nodeSelector: {}
+
+# -- Tolerations for pod scheduling
+tolerations: []
+
+# -- Affinity rules for pod scheduling
+affinity: {}
+
+# Operator configuration
+operator:
+  # -- Enable leader election (required for HA)
+  leaderElection: true
+  # -- Health probe bind address
+  healthProbeBindAddress: ":8081"
+  # -- Metrics bind address (0 to disable)
+  metricsBindAddress: ":8443"
+  # -- Enable secure metrics (HTTPS)
+  metricsSecure: true
+  # -- Enable HTTP/2 for metrics and webhooks
+  enableHTTP2: false
+  # -- Log level (debug, info, error)
+  logLevel: info
+  # -- Development mode logging (human-readable)
+  developmentMode: false
+
+# Webhook configuration
+webhook:
+  # -- Enable validation webhooks
+  enabled: true
+  # -- Port for webhook server
+  port: 9443
+  # -- Certificate directory (auto-generated if using cert-manager)
+  certDir: /tmp/k8s-webhook-server/serving-certs
+
+# Metrics configuration
+metrics:
+  # -- Enable ServiceMonitor for Prometheus Operator
+  serviceMonitor:
+    enabled: false
+    # -- Additional labels for ServiceMonitor
+    additionalLabels: {}
+    # -- Scrape interval
+    interval: 30s
+    # -- Scrape timeout
+    scrapeTimeout: 10s
+    # -- Metric relabelings
+    metricRelabelings: []
+    # -- Relabelings
+    relabelings: []
+
+# Certificate management
+certManager:
+  # -- Use cert-manager for webhook certificates
+  enabled: false
+  # -- Issuer kind (Issuer or ClusterIssuer)
+  issuerKind: Issuer
+  # -- Issuer name
+  issuerName: ""
+
+# RBAC configuration
+rbac:
+  # -- Create RBAC resources
+  create: true
+
+# CRD configuration
+crds:
+  # -- Install CRDs with the chart
+  install: true
+  # -- Keep CRDs on uninstall
+  keep: true
+
+# -- Priority class name for the operator pod
+priorityClassName: ""
+
+# -- Topology spread constraints for pod scheduling
+topologySpreadConstraints: []
+
+# Cardano-specific configuration
+cardano:
+  # -- Default Cardano node image
+  nodeImage: ghcr.io/intersectmbo/cardano-node:10.1.4
+  # -- cardano-cli image for transaction operations
+  cliImage: ghcr.io/intersectmbo/cardano-node:10.1.4

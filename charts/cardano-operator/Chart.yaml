@@ -1,0 +1,25 @@
+apiVersion: v2
+name: cardano-operator
+description: A Kubernetes operator for deploying and managing Cardano stake pools
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.28.0-0"
+home: https://github.com/AficaLabs/cardano-operator
+sources:
+  - https://github.com/AficaLabs/cardano-operator
+maintainers:
+  - name: AficaLabs
+    url: https://github.com/AficaLabs
+keywords:
+  - cardano
+  - blockchain
+  - stake-pool
+  - operator
+  - kubernetes
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/operator: "true"
+  artifacthub.io/operatorCapabilities: Full Lifecycle
+  artifacthub.io/prerelease: "true"
+  artifacthub.io/category: blockchain

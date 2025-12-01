@@ -1,0 +1,31 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "cardano-operator.fullname" . }}-manager
+  labels:
+    {{- include "cardano-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "cardano-operator.fullname" . }}-manager
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "cardano-operator.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "cardano-operator.fullname" . }}-metrics-auth-reader
+  labels:
+    {{- include "cardano-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "cardano-operator.fullname" . }}-metrics-auth-reader
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "cardano-operator.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}
