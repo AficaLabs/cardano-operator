@@ -1,0 +1,76 @@
+# Sample StakePool CR for testnet with managed keys
+apiVersion: cardano.cardano.org/v1alpha1
+kind: StakePool
+metadata:
+  name: my-pool
+  namespace: default
+spec:
+  # Network: preview, preprod, or mainnet
+  network: preprod
+
+  # On-chain pool parameters
+  poolParams:
+    # Pledge amount in lovelace (500 ADA = 500,000,000 lovelace)
+    pledge: "500000000000"
+    # Pool margin as decimal (3%)
+    margin: "0.03"
+    # Fixed cost per epoch in lovelace (340 ADA minimum)
+    cost: "340000000"
+    # Pool metadata
+    metadata:
+      url: "https://example.com/poolmeta.json"
+      # Pre-computed metadata hash (64 hex chars)
+      hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+    # Relay declarations
+    relays:
+      - type: dns
+        hostname: relay1.my-pool.example.com
+        port: 6000
+      - type: dns
+        hostname: relay2.my-pool.example.com
+        port: 6000
+
+  # Node deployment configuration
+  nodeConfig:
+    blockProducer:
+      resources:
+        requests:
+          cpu: "2"
+          memory: "8Gi"
+        limits:
+          cpu: "4"
+          memory: "16Gi"
+      nodeSelector:
+        node-type: block-producer
+    relayCount: 2
+    relaySpec:
+      resources:
+        requests:
+          cpu: "1"
+          memory: "4Gi"
+        limits:
+          cpu: "2"
+          memory: "8Gi"
+    # Cardano node version
+    nodeVersion: "10.1.4"
+
+  # Key management mode
+  keyManagement:
+    # managed: operator generates and manages keys
+    # external: user provides keys via OfflineSigningNode
+    mode: managed
+    # Epochs before KES expiry to rotate (default: 2)
+    kesRotationLeadEpochs: 2
+
+  # Payment configuration for transaction fees and deposits
+  paymentConfig:
+    # automated: operator uses provided payment key
+    # external: user must fund transactions manually
+    mode: external
+
+  # Storage configuration for blockchain data
+  storage:
+    storageClassName: fast-ssd
+    size: "200Gi"
+    accessModes:
+      - ReadWriteOnce

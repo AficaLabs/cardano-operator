@@ -1,0 +1,97 @@
+# Sample StakePool CR with external signing (air-gapped workflow)
+apiVersion: cardano.cardano.org/v1alpha1
+kind: StakePool
+metadata:
+  name: my-secure-pool
+  namespace: default
+spec:
+  # Network: preview, preprod, or mainnet
+  network: mainnet
+
+  # On-chain pool parameters
+  poolParams:
+    # Pledge amount in lovelace (1 million ADA for mainnet)
+    pledge: "1000000000000000"
+    # Pool margin (1.5%)
+    margin: "0.015"
+    # Fixed cost per epoch (340 ADA minimum)
+    cost: "340000000"
+    # Pool metadata
+    metadata:
+      url: "https://my-secure-pool.com/meta.json"
+      hash: "abc123def456abc123def456abc123def456abc123def456abc123def456abc1"
+    # Relay declarations - minimum 2 for mainnet
+    relays:
+      - type: dns
+        hostname: relay1.my-secure-pool.com
+        port: 6000
+      - type: dns
+        hostname: relay2.my-secure-pool.com
+        port: 6000
+      - type: ip
+        ipv4: "1.2.3.4"
+        port: 6000
+
+  # Node deployment configuration
+  nodeConfig:
+    blockProducer:
+      resources:
+        requests:
+          cpu: "4"
+          memory: "16Gi"
+        limits:
+          cpu: "8"
+          memory: "32Gi"
+      nodeSelector:
+        node-type: block-producer
+        security-zone: high
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "block-producer"
+          effect: "NoSchedule"
+    relayCount: 3
+    relaySpec:
+      resources:
+        requests:
+          cpu: "2"
+          memory: "8Gi"
+        limits:
+          cpu: "4"
+          memory: "16Gi"
+    nodeVersion: "10.1.4"
+
+  # External key management for air-gapped security
+  keyManagement:
+    mode: external
+    # Reference to OfflineSigningNode for signing operations
+    offlineSigningNodeRef: my-secure-pool-signing
+    kesRotationLeadEpochs: 3
+
+  # External payment - transactions must be funded manually
+  paymentConfig:
+    mode: external
+    # Display address for funding
+    paymentAddress: "addr1qy..."
+
+  # Storage configuration
+  storage:
+    storageClassName: premium-ssd
+    size: "500Gi"
+    accessModes:
+      - ReadWriteOnce
+---
+# OfflineSigningNode for air-gapped key operations
+apiVersion: cardano.cardano.org/v1alpha1
+kind: OfflineSigningNode
+metadata:
+  name: my-secure-pool-signing
+  namespace: default
+spec:
+  # Associated stake pool
+  stakePoolRef: my-secure-pool
+
+  # Reference to cold key secret (imported from offline system)
+  coldKeySecretRef:
+    name: my-secure-pool-cold-key
+    key: cold.vkey
