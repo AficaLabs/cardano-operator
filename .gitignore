@@ -37,3 +37,6 @@ logs/
 
 # Temporary files
 *.tmp
+
+# MCP server config (may contain secrets)
+.mcp-github.json
