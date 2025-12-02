@@ -199,7 +199,7 @@ func (e *Executor) QueryStakePoolID(ctx context.Context, coldVKeyPath string) (s
 
 // GenerateColdKeys generates cold key pair
 func (e *Executor) GenerateColdKeys(ctx context.Context) (*KeyPair, error) {
-	return e.generateKeyPair(ctx, "node", "key-gen", "--cold-verification-key-file", "--cold-signing-key-file")
+	return e.generateColdKeyPair(ctx)
 }
 
 // GenerateVRFKeys generates VRF key pair
@@ -214,16 +214,65 @@ func (e *Executor) GenerateKESKeys(ctx context.Context) (*KeyPair, error) {
 
 // GeneratePaymentKeys generates payment key pair
 func (e *Executor) GeneratePaymentKeys(ctx context.Context) (*KeyPair, error) {
-	return e.generateKeyPair(ctx, "address", "key-gen", "--verification-key-file", "--signing-key-file")
+	return e.generateKeyPair(ctx, "latest", "address", "key-gen", "--verification-key-file", "--signing-key-file")
 }
 
 // GenerateStakeKeys generates stake key pair
 func (e *Executor) GenerateStakeKeys(ctx context.Context) (*KeyPair, error) {
-	return e.generateKeyPair(ctx, "stake-address", "key-gen", "--verification-key-file", "--signing-key-file")
+	return e.generateKeyPair(ctx, "latest", "stake-address", "key-gen", "--verification-key-file", "--signing-key-file")
+}
+
+// generateColdKeyPair generates cold keys (node key-gen), which requires additional counter file in CLI v10+
+func (e *Executor) generateColdKeyPair(ctx context.Context) (*KeyPair, error) {
+	tmpDir, err := os.MkdirTemp("", "cardano-keys-*")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp dir: %w", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	vkeyPath := filepath.Join(tmpDir, "cold.vkey")
+	skeyPath := filepath.Join(tmpDir, "cold.skey")
+	counterPath := filepath.Join(tmpDir, "cold.counter")
+
+	args := []string{
+		"node", "key-gen",
+		"--cold-verification-key-file", vkeyPath,
+		"--cold-signing-key-file", skeyPath,
+		"--operational-certificate-issue-counter-file", counterPath,
+	}
+
+	if _, err := e.runCLI(ctx, args...); err != nil {
+		return nil, fmt.Errorf("failed to generate keys: %w", err)
+	}
+
+	vkey, err := os.ReadFile(vkeyPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read verification key: %w", err)
+	}
+
+	skey, err := os.ReadFile(skeyPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read signing key: %w", err)
+	}
+
+	return &KeyPair{
+		VerificationKey: vkey,
+		SigningKey:      skey,
+	}, nil
 }
 
 // generateKeyPair is a helper for generating key pairs
-func (e *Executor) generateKeyPair(ctx context.Context, category, command, vkeyFlag, skeyFlag string) (*KeyPair, error) {
+// Supports variable number of command segments (e.g., "node", "key-gen-VRF" or "latest", "address", "key-gen")
+func (e *Executor) generateKeyPair(ctx context.Context, cmdParts ...string) (*KeyPair, error) {
+	// Last two parts are vkeyFlag and skeyFlag
+	if len(cmdParts) < 4 {
+		return nil, fmt.Errorf("insufficient arguments for generateKeyPair")
+	}
+
+	skeyFlag := cmdParts[len(cmdParts)-1]
+	vkeyFlag := cmdParts[len(cmdParts)-2]
+	commandParts := cmdParts[:len(cmdParts)-2]
+
 	tmpDir, err := os.MkdirTemp("", "cardano-keys-*")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp dir: %w", err)
@@ -233,7 +282,7 @@ func (e *Executor) generateKeyPair(ctx context.Context, category, command, vkeyF
 	vkeyPath := filepath.Join(tmpDir, "key.vkey")
 	skeyPath := filepath.Join(tmpDir, "key.skey")
 
-	args := []string{category, command, vkeyFlag, vkeyPath, skeyFlag, skeyPath}
+	args := append(commandParts, vkeyFlag, vkeyPath, skeyFlag, skeyPath)
 
 	if _, err := e.runCLI(ctx, args...); err != nil {
 		return nil, fmt.Errorf("failed to generate keys: %w", err)
@@ -602,7 +651,7 @@ func (e *Executor) BuildStakeAddress(ctx context.Context, stakeVKey []byte) (str
 	}
 
 	args := []string{
-		"stake-address", "build",
+		"latest", "stake-address", "build",
 		"--stake-verification-key-file", stakeVKeyPath,
 	}
 	args = append(args, e.networkArgs()...)

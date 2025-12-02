@@ -13,6 +13,7 @@ on:
 env:
   GO_VERSION: "1.24"
   GOLANGCI_LINT_VERSION: "v2.1.0"
+  CARDANO_NODE_VERSION: "10.5.3"
 
 jobs:
   lint:
@@ -50,8 +51,70 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      - name: Install cardano-cli
+        run: |
+          echo "Downloading cardano-node ${{ env.CARDANO_NODE_VERSION }}..."
+          curl -LO https://github.com/IntersectMBO/cardano-node/releases/download/${{ env.CARDANO_NODE_VERSION }}/cardano-node-${{ env.CARDANO_NODE_VERSION }}-linux.tar.gz
+          tar -xzf cardano-node-${{ env.CARDANO_NODE_VERSION }}-linux.tar.gz
+          sudo mv bin/cardano-cli /usr/local/bin/
+          sudo chmod +x /usr/local/bin/cardano-cli
+          cardano-cli --version
+
       - name: Run tests
         run: make test
+
+      - name: Check coverage threshold
+        run: |
+          echo "=== Coverage Analysis ==="
+
+          # Get total coverage percentage
+          TOTAL_COVERAGE=$(go tool cover -func=cover.out | grep "total:" | awk '{print $NF}' | sed 's/%//')
+          echo "Total code coverage: ${TOTAL_COVERAGE}%"
+
+          # Calculate coverage for internal packages only
+          # Now includes executor.go CLI methods since cardano-cli is available in CI
+          TESTABLE_COVERAGE=$(LC_NUMERIC=C go tool cover -func=cover.out | \
+            grep -E "^github.com/AficaLabs/cardano-operator/internal/" | \
+            LC_NUMERIC=C awk -F'[[:space:]]+' '{gsub(/%/, "", $NF); sum += $NF; count++} END {if(count>0) printf "%.1f", sum/count; else print "0"}')
+          echo "Testable code coverage: ${TESTABLE_COVERAGE}%"
+
+          # Per-package coverage
+          echo ""
+          echo "=== Per-Package Coverage ==="
+          for pkg in cardano controller metrics webhook; do
+            PKG_COV=$(go test -cover ./internal/${pkg}/... 2>&1 | grep coverage | awk '{print $2}' | head -1)
+            echo "internal/${pkg}: ${PKG_COV:-N/A}"
+          done
+
+          # Enforce thresholds
+          # Total threshold: 40% of all code (includes cmd, api, test/utils with 0%)
+          # Testable threshold: 70% of testable code (internal packages)
+          # Note: Higher coverage requires running Cardano node for query/tx tests
+          TOTAL_THRESHOLD=40
+          TESTABLE_THRESHOLD=70
+
+          echo ""
+          echo "=== Threshold Check ==="
+
+          TOTAL_PASS=$(awk "BEGIN {print ($TOTAL_COVERAGE >= $TOTAL_THRESHOLD) ? 1 : 0}")
+          TESTABLE_PASS=$(awk "BEGIN {print ($TESTABLE_COVERAGE >= $TESTABLE_THRESHOLD) ? 1 : 0}")
+
+          if [ "$TOTAL_PASS" -eq 0 ]; then
+            echo "::error::Total coverage ${TOTAL_COVERAGE}% is below threshold ${TOTAL_THRESHOLD}%"
+          else
+            echo "Total coverage ${TOTAL_COVERAGE}% meets threshold ${TOTAL_THRESHOLD}%"
+          fi
+
+          if [ "$TESTABLE_PASS" -eq 0 ]; then
+            echo "::error::Testable code coverage ${TESTABLE_COVERAGE}% is below target ${TESTABLE_THRESHOLD}%"
+          else
+            echo "Testable code coverage ${TESTABLE_COVERAGE}% meets target ${TESTABLE_THRESHOLD}%"
+          fi
+
+          # Fail on either threshold not met
+          if [ "$TOTAL_PASS" -eq 0 ] || [ "$TESTABLE_PASS" -eq 0 ]; then
+            exit 1
+          fi
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
